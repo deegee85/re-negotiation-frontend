@@ -1,63 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Negotiation with Martin Noble</title>
+  <meta charset="UTF-8">
+  <title>Negotiation Simulation</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 40px;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
-    #chat-box {
-      border: 1px solid #ccc;
+
+    .chat-container {
+      flex: 1;
       padding: 20px;
-      height: 400px;
-      overflow-y: scroll;
-      margin-bottom: 20px;
+      overflow-y: auto; /* 🟥 SCROLLABLE HISTORY */
+      display: flex;
+      flex-direction: column;
     }
-    #user-input {
-      width: 70%;
+
+    .message {
+      max-width: 70%;
+      padding: 10px 15px;
+      border-radius: 15px;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .user {
+      align-self: flex-end;
+      background-color: #dcf8c6;
+    }
+
+    .ai {
+      align-self: flex-start;
+      background-color: #ffffff;
+      border: 1px solid #ccc;
+    }
+
+    .input-area {
+      display: flex;
+      padding: 15px;
+      background-color: white;
+      border-top: 1px solid #ccc;
+    }
+
+    input {
+      flex: 1;
       padding: 10px;
+      font-size: 16px;
     }
-    #send-btn {
+
+    button {
       padding: 10px 20px;
+      margin-left: 10px;
+      font-size: 16px;
+    }
+
+    /* 🟥 THREE BOUNCING DOTS */
+    .loading {
+      align-self: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .dots::after {
+      content: " ";
+      display: inline-block;
+      width: 1em;
+      text-align: left;
+      animation: dots 1s steps(3, end) infinite;
+    }
+
+    @keyframes dots {
+      0% { content: "."; }
+      33% { content: ".."; }
+      66% { content: "..."; }
+      100% { content: ""; }
     }
   </style>
 </head>
 <body>
-  <h1>Negotiation with Martin Noble</h1>
-  <div id="chat-box"></div>
-  <input type="text" id="user-input" placeholder="Type your message here" />
-  <button id="send-btn" onclick="sendMessage()">Send</button>
+
+  <div class="chat-container" id="chat"></div>
+
+  <div class="input-area">
+    <input type="text" id="user-input" placeholder="Say something..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
 
   <script>
-    async function sendMessage() {
-      const userMessage = document.getElementById("user-input").value;
-      const chatBox = document.getElementById("chat-box");
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("user-input");
 
-      // Display user message
-      chatBox.innerHTML += `<div><strong>You:</strong> ${userMessage}</div>`;
+    async function sendMessage() {
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      appendMessage(userText, "user");
+      input.value = "";
+
+      // 🟥 ADD LOADING SPINNER
+      const loadingEl = document.createElement("div");
+      loadingEl.className = "message ai loading";
+      loadingEl.innerHTML = "<span class='dots'></span>";
+      chat.appendChild(loadingEl);
+      chat.scrollTop = chat.scrollHeight;
 
       try {
         const response = await fetch("https://re-negotiation-backend.onrender.com/chat", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
           },
-          body: JSON.stringify({ message: userMessage }),
+          body: JSON.stringify({ message: userText })
         });
 
         const data = await response.json();
-
-        // Display AI reply
-        chatBox.innerHTML += `<div><strong>Martin:</strong> ${data.reply}</div>`;
-        document.getElementById("user-input").value = "";
+        chat.removeChild(loadingEl); // 🟥 REMOVE LOADING SPINNER
+        appendMessage(data.message, "ai");
       } catch (error) {
-        console.error("Error:", error);
-        chatBox.innerHTML += `<div><em>Error contacting server</em></div>`;
+        chat.removeChild(loadingEl);
+        appendMessage("Error contacting server.", "ai");
       }
     }
+
+    function appendMessage(text, sender) {
+      const msg = document.createElement("div");
+      msg.className = `message ${sender}`;
+      msg.textContent = text;
+      chat.appendChild(msg);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    input.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    });
   </script>
+
 </body>
 </html>
