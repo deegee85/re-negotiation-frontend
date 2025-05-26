@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Negotiation with Martin Noble</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    #chat-box {
+      border: 1px solid #ccc;
+      padding: 20px;
+      height: 400px;
+      overflow-y: scroll;
+      margin-bottom: 20px;
+    }
+    #user-input {
+      width: 70%;
+      padding: 10px;
+    }
+    #send-btn {
+      padding: 10px 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Negotiation with Martin Noble</h1>
+  <div id="chat-box"></div>
+  <input type="text" id="user-input" placeholder="Type your message here" />
+  <button id="send-btn" onclick="sendMessage()">Send</button>
+
+  <script>
+    async function sendMessage() {
+      const userMessage = document.getElementById("user-input").value;
+      const chatBox = document.getElementById("chat-box");
+
+      // Display user message
+      chatBox.innerHTML += `<div><strong>You:</strong> ${userMessage}</div>`;
+
+      try {
+        const response = await fetch("http://localhost:3000/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: userMessage }),
+        });
+
+        const data = await response.json();
+
+        // Display AI reply
+        chatBox.innerHTML += `<div><strong>Martin:</strong> ${data.reply}</div>`;
+        document.getElementById("user-input").value = "";
+      } catch (error) {
+        console.error("Error:", error);
+        chatBox.innerHTML += `<div><em>Error contacting server</em></div>`;
+      }
+    }
+  </script>
+</body>
+</html>
