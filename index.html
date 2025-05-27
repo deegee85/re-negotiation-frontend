@@ -106,7 +106,7 @@
       email = document.getElementById("email").value.trim();
       code = document.getElementById("code").value.trim();
 
-      const res = await fetch("https://re-negotiation-backend.onrender.com/login", {
+      const res = await fetch("https://re-negotiation-backend.onrender.com/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, code })
