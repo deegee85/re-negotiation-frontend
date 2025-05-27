@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Negotiation Simulation</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Negotiation with Mr Noble</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -11,83 +12,112 @@
       padding: 0;
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      align-items: center;
     }
 
-    .chat-container {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto; /* 🟥 SCROLLABLE HISTORY */
-      display: flex;
-      flex-direction: column;
+    h1 {
+      color: #b30000;
+      margin-top: 20px;
+    }
+
+    #chat {
+      width: 90%;
+      max-width: 600px;
+      height: 500px;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 20px 0;
+      overflow-y: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
     .message {
-      max-width: 70%;
+      margin: 10px 0;
       padding: 10px 15px;
-      border-radius: 15px;
-      margin-bottom: 10px;
+      border-radius: 20px;
+      max-width: 70%;
+      clear: both;
       line-height: 1.4;
     }
 
     .user {
-      align-self: flex-end;
       background-color: #dcf8c6;
+      align-self: flex-end;
+      float: right;
     }
 
     .ai {
+      background-color: #e2e2e2;
       align-self: flex-start;
-      background-color: #ffffff;
-      border: 1px solid #ccc;
+      float: left;
     }
 
-    .input-area {
-      display: flex;
-      padding: 15px;
-      background-color: white;
-      border-top: 1px solid #ccc;
-    }
-
-    input {
-      flex: 1;
-      padding: 10px;
-      font-size: 16px;
-    }
-
-    button {
-      padding: 10px 20px;
-      margin-left: 10px;
-      font-size: 16px;
-    }
-
-    /* 🟥 THREE BOUNCING DOTS */
-    .loading {
-      align-self: flex-start;
-      margin-bottom: 10px;
-    }
-
-    .dots::after {
-      content: " ";
+    .loading .dots {
       display: inline-block;
-      width: 1em;
-      text-align: left;
+      width: 24px;
+      text-align: center;
+    }
+
+    .loading .dots::after {
+      content: '...';
       animation: dots 1s steps(3, end) infinite;
     }
 
     @keyframes dots {
-      0% { content: "."; }
-      33% { content: ".."; }
-      66% { content: "..."; }
-      100% { content: ""; }
+      0%, 20% {
+        color: rgba(0,0,0,0);
+        text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0);
+      }
+      40% {
+        color: #000;
+        text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0);
+      }
+      60% {
+        text-shadow: .25em 0 0 #000, .5em 0 0 rgba(0,0,0,0);
+      }
+      80%, 100% {
+        text-shadow: .25em 0 0 #000, .5em 0 0 #000;
+      }
+    }
+
+    #input-area {
+      width: 90%;
+      max-width: 600px;
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    #user-input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      background-color: #b30000;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #800000;
     }
   </style>
 </head>
 <body>
-
-  <div class="chat-container" id="chat"></div>
-
-  <div class="input-area">
-    <input type="text" id="user-input" placeholder="Say something..." />
+  <h1>Negotiation with Mr. Martin Noble</h1>
+  <div id="chat"></div>
+  <div id="input-area">
+    <input type="text" id="user-input" placeholder="Type your message..." />
     <button onclick="sendMessage()">Send</button>
   </div>
 
@@ -102,7 +132,6 @@
       appendMessage(userText, "user");
       input.value = "";
 
-      // 🟥 ADD LOADING SPINNER
       const loadingEl = document.createElement("div");
       loadingEl.className = "message ai loading";
       loadingEl.innerHTML = "<span class='dots'></span>";
@@ -119,8 +148,9 @@
         });
 
         const data = await response.json();
+        console.log("AI response:", data); // Add this line
         chat.removeChild(loadingEl); // 🟥 REMOVE LOADING SPINNER
-        appendMessage(data.message, "ai");
+        appendMessage(data.reply || "⚠️ No message received from AI", "ai");
       } catch (error) {
         chat.removeChild(loadingEl);
         appendMessage("Error contacting server.", "ai");
@@ -128,12 +158,17 @@
     }
 
     function appendMessage(text, sender) {
-      const msg = document.createElement("div");
-      msg.className = `message ${sender}`;
-      msg.textContent = text;
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
-    }
+  const msg = document.createElement("div");
+  msg.className = `message ${sender}`;
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.textContent = text;
+
+  msg.appendChild(bubble);
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+}
 
     input.addEventListener("keypress", function (e) {
       if (e.key === "Enter") {
@@ -141,6 +176,5 @@
       }
     });
   </script>
-
 </body>
 </html>
