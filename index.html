@@ -107,7 +107,7 @@
       code = document.getElementById("code").value.trim();
 
      
-    const res = await fetch("https://re-negotiation-backend.onrender.com/start", {
+    const res = await fetch("https://re-negotiation-backend.onrender.com/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, code })
