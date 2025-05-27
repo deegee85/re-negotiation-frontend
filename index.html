@@ -81,7 +81,7 @@
   </style>
 </head>
 <body>
-  <h1>Negotiation with Mr. Noble</h1>
+  <h1>Negotiation with Mr. Martin Noble</h1>
 
   <div id="login-container">
     <h2>Enter to Begin</h2>
@@ -106,7 +106,8 @@
       email = document.getElementById("email").value.trim();
       code = document.getElementById("code").value.trim();
 
-      const res = await fetch("https://re-negotiation-backend.onrender.com/start", {
+     
+    const res = await fetch("https://re-negotiation-backend.onrender.com/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, code })
@@ -138,10 +139,13 @@
       chat.scrollTop = chat.scrollHeight;
 
       try {
+
+        console.log("Sending chat message:", { message: userText, email });
+
         const res = await fetch("https://re-negotiation-backend.onrender.com/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: userText, name, email })
+          body: JSON.stringify({ message: userText, email })
         });
 
         const data = await res.json();
