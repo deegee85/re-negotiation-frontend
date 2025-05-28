@@ -99,7 +99,8 @@
   </div>
 
   <script>
-    let name = "", email = "", code = "", sessionId = "";
+    let name = "", email = "", code = "";
+    let sessionId = "";
 
     async function submitLogin() {
       name = document.getElementById("name").value.trim();
@@ -114,8 +115,9 @@
 
       const data = await res.json();
 
-      if (res.ok && data.sessionId) {
+      if (res.ok) {
         sessionId = data.sessionId;
+        console.log("DEBUG: sessionId =", sessionId);
         document.getElementById("login-container").style.display = "none";
         document.getElementById("chat-container").style.display = "block";
       } else {
@@ -139,9 +141,7 @@
       chat.scrollTop = chat.scrollHeight;
 
       try {
-        console.log("DEBUG: sessionId =", sessionId);
         console.log("DEBUG: message =", userText);
-
         const res = await fetch("https://re-negotiation-backend.onrender.com/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -150,16 +150,13 @@
 
         const data = await res.json();
         chat.removeChild(loading);
-
-        if (res.ok) {
+        if (data.reply) {
           appendMessage(data.reply, "ai");
         } else {
-          console.error("Server error:", data);
-          appendMessage(`Server error: ${data.error || 'Unknown error'}`, "ai");
+          appendMessage("No message received from AI", "ai");
         }
       } catch (error) {
         chat.removeChild(loading);
-        console.error("Fetch error:", error);
         appendMessage("Error contacting server", "ai");
       }
     }
