@@ -1,88 +1,114 @@
-<script>
-  let name = "", email = "", code = "";
-  let sessionId = "";
-
-  async function submitLogin() {
-  name = document.getElementById("name").value.trim();
-  email = document.getElementById("email").value.trim();
-  code = document.getElementById("code").value.trim();
-
-  console.log("Submitting login with:", { name, email, code });
-
-  try {
-    const res = await fetch("https://re-negotiation-backend.onrender.com/start", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, code })
-    });
-
-    const data = await res.json();
-    console.log("Received response:", data);
-
-    if (res.ok) {
-      sessionId = data.sessionId;
-      console.log("DEBUG: sessionId =", sessionId);
-
-      document.getElementById("login-container").style.display = "none";
-      document.getElementById("chat-container").style.display = "block";
-    } else {
-      document.getElementById("login-error").textContent = data.error || "Login failed.";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Real Estate Negotiation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
     }
-  } catch (err) {
-    console.error("Login error:", err);
-    document.getElementById("login-error").textContent = "Network or server error.";
-  }
-}
-
-
-  async function sendMessage() {
-    if (!sessionId) {
-      appendMessage("Session not started. Please login again.", "ai");
-      return;
+    #chatBox {
+      height: 300px;
+      overflow-y: scroll;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
     }
+  </style>
+</head>
+<body>
 
-    const input = document.getElementById("user-input");
-    const chat = document.getElementById("chat");
-    const userText = input.value.trim();
-    if (!userText) return;
+  <!-- Login Section -->
+  <div id="loginSection">
+    <h2>Start Negotiation</h2>
+    <form id="startForm">
+      <input type="text" id="name" placeholder="Name" required /><br /><br />
+      <input type="email" id="email" placeholder="Email" required /><br /><br />
+      <input type="text" id="code" placeholder="Access Code" required /><br /><br />
+      <button type="submit">Enter</button>
+    </form>
+  </div>
 
-    appendMessage(userText, "user");
-    input.value = "";
+  <!-- Chat Section -->
+  <div id="chatSection" style="display: none;">
+    <h2>Negotiation with Martin Noble</h2>
+    <div id="chatBox"></div>
+    <form id="chatForm">
+      <input type="text" id="userInput" placeholder="Type your message..." required />
+      <button type="submit">Send</button>
+    </form>
+  </div>
 
-    const loading = document.createElement("div");
-    loading.className = "message ai loading";
-    loading.innerHTML = "<span class='dots'>...</span>";
-    chat.appendChild(loading);
-    chat.scrollTop = chat.scrollHeight;
+  <!-- Script -->
+  <script>
+    let sessionId = null;
 
-    console.log("Sending message with sessionId:", sessionId);
+    document.getElementById("startForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
 
-    try {
-      const res = await fetch("https://re-negotiation-backend.onrender.com/chat", {
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const code = document.getElementById("code").value.trim();
+
+      const response = await fetch("https://re-negotiation-backend.onrender.com/start", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userText, sessionId })
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, code }),
       });
 
-      const data = await res.json();
-      chat.removeChild(loading);
-      if (data.reply) {
-        appendMessage(data.reply, "ai");
-      } else {
-        appendMessage("No message received from AI", "ai");
-      }
-    } catch (error) {
-      chat.removeChild(loading);
-      appendMessage("Error contacting server", "ai");
-    }
-  }
+      const data = await response.json();
 
-  function appendMessage(text, sender) {
-    const chat = document.getElementById("chat");
-    const msg = document.createElement("div");
-    msg.className = `message ${sender}`;
-    msg.textContent = text;
-    chat.appendChild(msg);
-    chat.scrollTop = chat.scrollHeight;
-  }
-</script>
+      if (response.ok) {
+        sessionId = data.sessionId;
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("chatSection").style.display = "block";
+      } else {
+        alert(data.error || "Login failed");
+      }
+    });
+
+    document.getElementById("chatForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const userInput = document.getElementById("userInput").value.trim();
+      if (!userInput) return;
+
+      appendMessage("You", userInput);
+
+      const response = await fetch("https://re-negotiation-backend.onrender.com/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: userInput,
+          sessionId: sessionId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        appendMessage("Martin", data.reply);
+      } else {
+        appendMessage("System", data.error || "Error talking to server");
+      }
+
+      document.getElementById("userInput").value = "";
+    });
+
+    function appendMessage(sender, message) {
+      const chatBox = document.getElementById("chatBox");
+      const p = document.createElement("p");
+      p.innerHTML = `<strong>${sender}:</strong> ${message}`;
+      chatBox.appendChild(p);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+
+</body>
+</html>
