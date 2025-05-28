@@ -1,174 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Negotiation with Mr. Noble</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f0f2f5;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+<script>
+  let name = "", email = "", code = "";
+  let sessionId = "";
+
+  async function submitLogin() {
+    name = document.getElementById("name").value.trim();
+    email = document.getElementById("email").value.trim();
+    code = document.getElementById("code").value.trim();
+
+    const res = await fetch("https://re-negotiation-backend.onrender.com/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, code })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.sessionId) {
+      sessionId = data.sessionId;
+      console.log("DEBUG: sessionId =", sessionId);
+
+      document.getElementById("login-container").style.display = "none";
+      document.getElementById("chat-container").style.display = "block";
+    } else {
+      document.getElementById("login-error").textContent = data.error || "Login failed.";
+    }
+  }
+
+  async function sendMessage() {
+    if (!sessionId) {
+      appendMessage("Session not started. Please login again.", "ai");
+      return;
     }
 
-    h1 {
-      color: #b30000;
-      margin-top: 20px;
-    }
+    const input = document.getElementById("user-input");
+    const chat = document.getElementById("chat");
+    const userText = input.value.trim();
+    if (!userText) return;
 
-    #login-container, #chat-container {
-      width: 100%;
-      max-width: 600px;
-      margin: 20px;
-      padding: 20px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
+    appendMessage(userText, "user");
+    input.value = "";
 
-    input, button {
-      padding: 10px;
-      margin: 5px 0;
-      width: 100%;
-      box-sizing: border-box;
-      font-size: 16px;
-    }
+    const loading = document.createElement("div");
+    loading.className = "message ai loading";
+    loading.innerHTML = "<span class='dots'>...</span>";
+    chat.appendChild(loading);
+    chat.scrollTop = chat.scrollHeight;
 
-    #chat {
-      height: 400px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
-      background: #fafafa;
-    }
+    console.log("Sending message with sessionId:", sessionId);
 
-    .message {
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 8px;
-      max-width: 80%;
-      word-wrap: break-word;
-    }
-
-    .user {
-      background-color: #d1e7dd;
-      align-self: flex-end;
-      margin-left: auto;
-    }
-
-    .ai {
-      background-color: #f8d7da;
-      align-self: flex-start;
-      margin-right: auto;
-    }
-
-    .loading .dots::after {
-      content: "...";
-      animation: blink 1s infinite steps(3);
-    }
-
-    @keyframes blink {
-      0% { content: ""; }
-      33% { content: "."; }
-      66% { content: ".."; }
-      100% { content: "..."; }
-    }
-  </style>
-</head>
-<body>
-  <h1>Negotiation with Mr. Martin Noble</h1>
-
-  <div id="login-container">
-    <h2>Enter to Begin</h2>
-    <input type="text" id="name" placeholder="Your Name" />
-    <input type="email" id="email" placeholder="Your Email" />
-    <input type="text" id="code" placeholder="Access Code" />
-    <button onclick="submitLogin()">Start Negotiation</button>
-    <p id="login-error" style="color:red;"></p>
-  </div>
-
-  <div id="chat-container" style="display: none;">
-    <div id="chat"></div>
-    <input type="text" id="user-input" placeholder="Type your message..." />
-    <button onclick="sendMessage()">Send</button>
-  </div>
-
-  <script>
-    let name = "", email = "", code = "";
-    let sessionId = "";
-
-    async function submitLogin() {
-      name = document.getElementById("name").value.trim();
-      email = document.getElementById("email").value.trim();
-      code = document.getElementById("code").value.trim();
-
-      const res = await fetch("https://re-negotiation-backend.onrender.com/start", {
+    try {
+      const res = await fetch("https://re-negotiation-backend.onrender.com/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, code })
+        body: JSON.stringify({ message: userText, sessionId })
       });
 
       const data = await res.json();
-
-      if (res.ok) {
-        sessionId = data.sessionId;
-        console.log("DEBUG: sessionId =", sessionId);
-
-        document.getElementById("login-container").style.display = "none";
-        document.getElementById("chat-container").style.display = "block";
+      chat.removeChild(loading);
+      if (data.reply) {
+        appendMessage(data.reply, "ai");
       } else {
-        document.getElementById("login-error").textContent = data.error || "Login failed.";
+        appendMessage("No message received from AI", "ai");
       }
+    } catch (error) {
+      chat.removeChild(loading);
+      appendMessage("Error contacting server", "ai");
     }
+  }
 
-    async function sendMessage() {
-      const input = document.getElementById("user-input");
-      const chat = document.getElementById("chat");
-      const userText = input.value.trim();
-      if (!userText) return;
-
-      appendMessage(userText, "user");
-      input.value = "";
-
-      const loading = document.createElement("div");
-      loading.className = "message ai loading";
-      loading.innerHTML = "<span class='dots'>...</span>";
-      chat.appendChild(loading);
-      chat.scrollTop = chat.scrollHeight;
-
-      try {
-        const res = await fetch("https://re-negotiation-backend.onrender.com/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: userText, sessionId })
-        });
-
-        const data = await res.json();
-        chat.removeChild(loading);
-        if (data.reply) {
-          appendMessage(data.reply, "ai");
-        } else {
-          appendMessage("No message received from AI", "ai");
-        }
-      } catch (error) {
-        chat.removeChild(loading);
-        appendMessage("Error contacting server", "ai");
-      }
-    }
-
-    function appendMessage(text, sender) {
-      const chat = document.getElementById("chat");
-      const msg = document.createElement("div");
-      msg.className = `message ${sender}`;
-      msg.textContent = text;
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
-    }
-  </script>
-</body>
-</html>
+  function appendMessage(text, sender) {
+    const chat = document.getElementById("chat");
+    const msg = document.createElement("div");
+    msg.className = `message ${sender}`;
+    msg.textContent = text;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+</script>
