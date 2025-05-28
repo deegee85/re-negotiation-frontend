@@ -3,10 +3,13 @@
   let sessionId = "";
 
   async function submitLogin() {
-    name = document.getElementById("name").value.trim();
-    email = document.getElementById("email").value.trim();
-    code = document.getElementById("code").value.trim();
+  name = document.getElementById("name").value.trim();
+  email = document.getElementById("email").value.trim();
+  code = document.getElementById("code").value.trim();
 
+  console.log("Submitting login with:", { name, email, code });
+
+  try {
     const res = await fetch("https://re-negotiation-backend.onrender.com/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -14,8 +17,9 @@
     });
 
     const data = await res.json();
+    console.log("Received response:", data);
 
-    if (res.ok && data.sessionId) {
+    if (res.ok) {
       sessionId = data.sessionId;
       console.log("DEBUG: sessionId =", sessionId);
 
@@ -24,7 +28,12 @@
     } else {
       document.getElementById("login-error").textContent = data.error || "Login failed.";
     }
+  } catch (err) {
+    console.error("Login error:", err);
+    document.getElementById("login-error").textContent = "Network or server error.";
   }
+}
+
 
   async function sendMessage() {
     if (!sessionId) {
