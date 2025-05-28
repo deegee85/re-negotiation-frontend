@@ -114,7 +114,7 @@
 
       const data = await res.json();
 
-      if (res.ok) {
+      if (res.ok && data.sessionId) {
         sessionId = data.sessionId;
         document.getElementById("login-container").style.display = "none";
         document.getElementById("chat-container").style.display = "block";
@@ -139,7 +139,8 @@
       chat.scrollTop = chat.scrollHeight;
 
       try {
-        console.log("Sending chat message:", { message: userText, sessionId });
+        console.log("DEBUG: sessionId =", sessionId);
+        console.log("DEBUG: message =", userText);
 
         const res = await fetch("https://re-negotiation-backend.onrender.com/chat", {
           method: "POST",
@@ -149,13 +150,16 @@
 
         const data = await res.json();
         chat.removeChild(loading);
-        if (data.reply) {
+
+        if (res.ok) {
           appendMessage(data.reply, "ai");
         } else {
-          appendMessage("No message received from AI", "ai");
+          console.error("Server error:", data);
+          appendMessage(`Server error: ${data.error || 'Unknown error'}`, "ai");
         }
       } catch (error) {
         chat.removeChild(loading);
+        console.error("Fetch error:", error);
         appendMessage("Error contacting server", "ai");
       }
     }
