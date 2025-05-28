@@ -63,9 +63,15 @@
       const data = await response.json();
 
       if (response.ok) {
-        sessionId = data.sessionId;
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("chatSection").style.display = "block";
+  sessionId = data.sessionId;
+  console.log("✅ sessionId from backend:", sessionId);
+  document.getElementById("loginSection").style.display = "none";
+  document.getElementById("chatSection").style.display = "block";
+} else {
+  console.error("❌ Backend error response:", data);
+  alert(data.error || "Login failed");
+}
+
       } else {
         alert(data.error || "Login failed");
       }
