@@ -118,6 +118,7 @@
       if (res.ok) {
         sessionId = data.sessionId;
         console.log("DEBUG: sessionId =", sessionId);
+
         document.getElementById("login-container").style.display = "none";
         document.getElementById("chat-container").style.display = "block";
       } else {
@@ -141,7 +142,6 @@
       chat.scrollTop = chat.scrollHeight;
 
       try {
-        console.log("DEBUG: message =", userText);
         const res = await fetch("https://re-negotiation-backend.onrender.com/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
